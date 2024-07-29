@@ -81,6 +81,7 @@ def ipa_to_english(ipa):
     else:
         return f"Error: {response.status_code}"
 
+
 def process_translation(input_file, output_file):
     with open(input_file, "r", encoding="utf-8") as infile:
         songs = infile.read().split(f"\n\n\n")
@@ -151,6 +152,16 @@ def main():
         input_file = args.input or DEFAULT_OUTPUT_FILE
         output_file = args.output or DEFAULT_CLEANED_FILE
         clean_ipa(input_file, output_file)
+    elif args.action == "gen":
+        from llm import generate
+        ipa = generate()
+        print(ipa, "\n\n====\n\n")
+        print(ipa_to_english(ipa))
+    elif args.action == "train":
+        from llm import train
+        train()
+        print("done")
+
 
 if __name__ == "__main__":
     main()

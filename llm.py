@@ -1,27 +1,47 @@
-#!python
+#!/usr/bin/env python
 
 import re
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from tqdm import tqdm
-from run import ipa_to_english
 
-batch_size = 32
-block_size = 64
-max_iters = 5000
-eval_interval = 500
-learning_rate = 1e-3
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-eval_iters = 100
-n_embd = 96
-n_head = 6
-n_layer = 6
-dropout = 0.4
+is_prod = False
+
+if is_prod:
+    batch_size = 64
+    block_size = 256
+    max_iters = 5000
+    eval_interval = 500
+    learning_rate = 3e-4
+    eval_iters = 200
+    n_embd = 384
+    n_head = 6
+    n_layer = 6
+    dropout = 0.2
+else:
+    batch_size = 32
+    block_size = 16
+    max_iters = 5000
+    eval_interval = 500
+    eval_iters = 100
+    learning_rate = 1e-3
+    n_embd = 36
+    n_head = 4
+    n_layer = 4
+    dropout = 0.2
+
+data_file = "./data/lyrics_ipa_cleaned.txt"
+model_file = "./data/model.pt"
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else ("mps" if torch.backends.mps.is_available() else "cpu")
+)
 
 torch.manual_seed(1337)
 
-with open("./data/lyrics_ipa_cleaned.txt", encoding="utf-8") as f:
+with open(data_file, encoding="utf-8") as f:
     text = f.read()
     text = re.sub(r"=+", "=", text)
 
@@ -47,7 +67,7 @@ def get_batch(split):
 
 
 @torch.no_grad()
-def estimate_loss():
+def estimate_loss(model):
     out = {}
     model.eval()
     for split in ["train", "val"]:
@@ -167,30 +187,33 @@ class BigramLanguageModel(nn.Module):
         return idx
 
 
-model = BigramLanguageModel()
-m = model.to(device)
-print(sum(p.numel() for p in m.parameters()), "M parameters")
-optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-
-
 def train():
+    model = BigramLanguageModel()
+    m = model.to(device)
+    print(sum(p.numel() for p in m.parameters()), "parameters")
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+
     for i in tqdm(range(max_iters + 1)):
         if i % eval_interval == 0:
-            losses = estimate_loss()
+            losses = estimate_loss(model)
             print(
                 f"step {i}: train loss {losses['train']:.4f}, "
                 f"val loss {losses['val']:.4f}"
             )
 
         xb, yb = get_batch("train")
-        logits, loss = model(xb, yb)
+        _, loss = model(xb, yb)
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
+    torch.save(model.state_dict(), model_file)
 
 
-train()
-context = torch.zeros((1, 1), dtype=torch.long, device=device)
-ipa = decode(m.generate(context, max_new_tokens=500)[0].tolist())
-print(ipa, "\n\n====\n\n")
-print(ipa_to_english(ipa))
+def generate(ntoks=500):
+    model = BigramLanguageModel()
+    model.load_state_dict(torch.load(model_file, weights_only=True))
+    model.to(device)
+    model.eval()
+    context = torch.zeros((1, 1), dtype=torch.long, device=device)
+    ipa = decode(model.generate(context, max_new_tokens=ntoks)[0].tolist())
+    return ipa
