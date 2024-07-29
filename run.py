@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/env python
 
 import requests
 import json
@@ -8,9 +8,9 @@ import argparse
 from tqdm import tqdm
 
 SONG_SEPARATOR = "====="
-DEFAULT_INPUT_FILE = "data/lyrics.txt"
-DEFAULT_OUTPUT_FILE = "data/lyrics_ipa.txt"
-DEFAULT_CLEANED_FILE = "data/lyrics_ipa_cleaned.txt"
+DEFAULT_INPUT_FILE = "./data/lyrics.txt"
+DEFAULT_OUTPUT_FILE = "./data/lyrics_ipa.txt"
+DEFAULT_CLEANED_FILE = "./data/lyrics_ipa_cleaned.txt"
 
 
 def translate_to_ipa(text):
@@ -83,11 +83,11 @@ def ipa_to_english(ipa):
 
 def process_translation(input_file, output_file):
     with open(input_file, "r", encoding="utf-8") as infile:
-        songs = infile.read().split(f"\n\n{SONG_SEPARATOR}\n\n")
+        songs = infile.read().split(f"\n\n\n")
 
     if os.path.exists(output_file):
         with open(output_file, "r", encoding="utf-8") as outfile:
-            existing_content = outfile.read().split(f"\n\n{SONG_SEPARATOR}\n\n")
+            existing_content = outfile.read().split(f"\n\n\n")
         start_index = len(existing_content) - 1
     else:
         start_index = 0
@@ -146,7 +146,7 @@ def main():
     if args.action == "translate":
         input_file = args.input or DEFAULT_INPUT_FILE
         output_file = args.output or DEFAULT_OUTPUT_FILE
-        process_translation(args.input, output_file)
+        process_translation(input_file, output_file)
     elif args.action == "clean":
         input_file = args.input or DEFAULT_OUTPUT_FILE
         output_file = args.output or DEFAULT_CLEANED_FILE
