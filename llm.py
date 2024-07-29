@@ -189,9 +189,8 @@ class BigramLanguageModel(nn.Module):
 
 
 def train():
-    model = BigramLanguageModel()
-    m = model.to(device)
-    print(sum(p.numel() for p in m.parameters()), "parameters")
+    model = BigramLanguageModel().to(device)
+    print(sum(p.numel() for p in model.parameters())/1e6, "M parameters")
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
     for i in tqdm(range(max_iters + 1)):
