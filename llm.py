@@ -6,19 +6,19 @@ import torch.nn as nn
 from torch.nn import functional as F
 from tqdm import tqdm
 
-is_prod = False
+is_prod = torch.cuda.is_available()
 
 if is_prod:
     batch_size = 64
-    block_size = 256
+    block_size = 128
     max_iters = 5000
     eval_interval = 500
     learning_rate = 3e-4
     eval_iters = 200
-    n_embd = 384
+    n_embd = 192
     n_head = 6
     n_layer = 6
-    dropout = 0.2
+    dropout = 0.3
 else:
     batch_size = 32
     block_size = 16
@@ -32,7 +32,7 @@ else:
     dropout = 0.2
 
 data_file = "./data/lyrics_ipa_cleaned.txt"
-model_file = "./data/model.pt"
+model_file = f"./data/model_{'prod' if is_prod else 'dev'}.pt"
 device = torch.device(
     "cuda"
     if torch.cuda.is_available()
