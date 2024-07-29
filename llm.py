@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import re
+import os
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from tqdm import tqdm
 
-is_prod = torch.cuda.is_available()
+is_prod = os.environ.get("ENV", "prod" if torch.cuda.is_available() else "dev") == "prod"
 
 if is_prod:
     batch_size = 64
