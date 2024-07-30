@@ -32,7 +32,7 @@ else:
     n_layer = 4
     dropout = 0.2
 
-data_file = "./data/lyrics_ipa_cleaned.txt"
+data_file = "./data/lyrics_ipa_full_cleaned.txt"
 model_file = f"./data/model_{'prod' if is_prod else 'dev'}.pt"
 device = torch.device(
     "cuda"

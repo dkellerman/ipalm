@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 SONG_SEPARATOR = "====="
 DEFAULT_INPUT_FILE = "./data/lyrics.txt"
+DEFAULT_INPUT_DIR = "./data/database/"
 DEFAULT_OUTPUT_FILE = "./data/lyrics_ipa.txt"
 DEFAULT_CLEANED_FILE = "./data/lyrics_ipa_cleaned.txt"
 
@@ -83,19 +84,22 @@ def ipa_to_english(ipa):
 
 
 def process_translation(input_file, output_file):
-    with open(input_file, "r", encoding="utf-8") as infile:
-        songs = infile.read().split(f"\n\n\n")
+    songs = []
 
-    if os.path.exists(output_file):
-        with open(output_file, "r", encoding="utf-8") as outfile:
-            existing_content = outfile.read().split(f"\n\n\n")
-        start_index = len(existing_content) - 1
-    else:
-        start_index = 0
+    for root, dirs, files in os.walk(DEFAULT_INPUT_DIR):
+        for file in files:
+            f = os.path.join(root, file)
+            with open(f, "r", encoding="utf-8", errors="ignore") as infile:
+                content = infile.read().replace("’", "'")
+                parts = re.split(r"\n_{2,}\n", content)
+                songs.append(parts[0].strip())
+
+    with open(input_file, "r", encoding="utf-8") as infile:
+        songs += infile.read().split(f"\n\n\n")
 
     for i in tqdm(
-        range(start_index, len(songs)),
-        initial=start_index,
+        range(0, len(songs)),
+        initial=0,
         total=len(songs),
         desc="Translating songs",
     ):
@@ -154,11 +158,13 @@ def main():
         clean_ipa(input_file, output_file)
     elif args.action == "gen":
         from llm import generate
+
         ipa = generate()
         print(ipa, "\n\n====\n\n")
         print(ipa_to_english(ipa))
     elif args.action == "train":
         from llm import train
+
         train()
         print("done")
 
