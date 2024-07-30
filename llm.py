@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 is_prod = os.environ.get("ENV", "prod" if torch.cuda.is_available() else "dev") == "prod"
 
-if is_prod:
+if False:
     batch_size = 64
     block_size = 128
     max_iters = 5000
@@ -23,10 +23,10 @@ if is_prod:
 else:
     batch_size = 32
     block_size = 16
-    max_iters = 5000
+    max_iters = 20000
     eval_interval = 500
     eval_iters = 100
-    learning_rate = 1e-3
+    learning_rate = 3e-4
     n_embd = 36
     n_head = 4
     n_layer = 4
